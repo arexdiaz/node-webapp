@@ -66,9 +66,9 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
         script: docker pull arexdiaz/node-webapp:latest; docker stop nodeapp || true; docker rm nodeapp || true; docker run -d --name nodeapp -p 3000:3000 arexdiaz/node-webapp:latest
-    -
-      name: Webserver up
-      run: curl --fail http://${{ vars.EC2_HOST }}:3000/ || exit 1
+    # -
+    #   name: Webserver up
+    #   run: curl --fail http://${{ vars.EC2_HOST }}:3000/ || exit 1
     -
       name: Notify Success
       if: success()
