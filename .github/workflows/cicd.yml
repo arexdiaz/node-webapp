@@ -41,22 +41,18 @@ jobs:
           tags: arexdiaz/node-webapp:latest
   
   deploy:
-    runs-on: ubuntu-latest
     needs: test-and-build
+    runs-on: ubuntu-latest
     steps:
     -
       name: Checkout
       uses: actions/checkout@v4
     -
-      name: Create SSH Key
-      run: |
-        echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
-        chmod 600 key.pem
-    -
-      name: Deploy2EC2
-      run: |
-        ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-        docker pull arexdiaz/node-webapp:latest
-        docker stop nodeapp || true
-        docker rm nodeapp || true
-        docker run -d --name nodeapp -p 3000:3000 arexdiaz/node-webapp:latest
+      name: Execute remote SSH commands using password
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: docker pull arexdiaz/node-webapp:latest; docker stop nodeapp || true; docker rm nodeapp || true; docker run -d --name nodeapp -p 3000:3000 arexdiaz/node-webapp:latest
