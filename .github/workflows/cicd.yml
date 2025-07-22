@@ -1,4 +1,4 @@
-name: ci
+name: Build and Deploy
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # Corrected 'nodeversion' to 'node-version' for setup-node action
+          node-version: '22'
       
       - name: Install dependencies
         run: npm ci
@@ -39,3 +39,23 @@ jobs:
         with:
           push: true
           tags: arexdiaz/node-webapp:latest
+  
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name: Checkout
+      uses: actions/checkout@v4
+    -
+      name: Create SSH Key
+      run: |
+        echo "${{ secrets.EC2_SSH_KEY }}" > key.pem
+        chmod 600 key.pem
+    -
+      name: Deploy2EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF
+        docker pull arexdiaz/node-webapp:latest
+        docker stop nodeapp || true
+        docker rm nodeapp || true
+        docker run -d --name nodeapp -p 3000:3000 arexdiaz/node-webapp:latest
